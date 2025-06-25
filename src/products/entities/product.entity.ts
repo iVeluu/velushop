@@ -1,4 +1,12 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+} from 'typeorm';
+import { ProductImage } from './product-image-identity';
 
 @Entity()
 export class Product {
@@ -39,7 +47,16 @@ export class Product {
   @Column('text')
   gender: string;
 
-  //TODO: Tags and images
+  @Column('text', {
+    array: true,
+    default: [],
+  })
+  tags: string[];
+
+  @OneToMany(() => ProductImage, (productImage) => productImage.product, {
+    cascade: true,
+  })
+  images?: ProductImage;
 
   //Check the slug before insert
   @BeforeInsert()
@@ -49,6 +66,15 @@ export class Product {
     }
 
     this.slug = this.slug
+      .toLowerCase()
+      .replaceAll(' ', '_')
+      .replaceAll("'", '');
+  }
+
+  @BeforeUpdate()
+  checkSlugUpdate() {
+    this.slug = this.slug
+      .trim()
       .toLowerCase()
       .replaceAll(' ', '_')
       .replaceAll("'", '');
